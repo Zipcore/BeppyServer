@@ -332,10 +332,7 @@ namespace BeppyServer {
         public override void Execute(ClientInfo sender, List<string> args)
         {
             if (args.Count < 1)
-            {
-                BeppyServer.Log("Need argument <gameobject>");
-                return;
-            }
+                throw new CommandArgsException();
 
             UnityUtility.OutputComponents(args[0]);
         }

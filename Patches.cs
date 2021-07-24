@@ -1,15 +1,62 @@
 ﻿using System;
 using HarmonyLib;
 using System.Collections.Generic;
+using BepInEx.Logging;
 
 namespace BeppyServer {
+    [HarmonyPatch(typeof(WinFormConnection))]
+    public class WinFormConnectionPatch
+    {
+
+        [HarmonyPostfix]
+        [HarmonyPatch(MethodType.Constructor, new Type[] { typeof(WinFormInstance) })]
+        static void ConstructorPostfix(WinFormConnection __instance)
+        {
+            Console.NativeConsole = new WindowsConsole(__instance);
+        }
+
+        [HarmonyPrefix]
+        [HarmonyPatch("SendLog")]
+        static bool SendLogPrefix(ref string _text, string _trace, UnityEngine.LogType _type)
+        {
+            Console.Translate(_type, ref _text);
+            return true;
+        }
+
+        [HarmonyPrefix]
+        [HarmonyPatch("SendLine")]
+        static bool SendLinePrefix(ref string _line)
+        {
+            Console.Log(_line);
+            return false;
+        }
+
+        [HarmonyPrefix]
+        [HarmonyPatch("SendLines")]
+        static bool SendLinesPrefix(List<string> _output)
+        {
+            foreach (string line in _output)
+            {
+                Console.Log(line);
+            }
+
+            return false;
+        }
+    }
+
 
     [HarmonyPatch(typeof(GameManager))]
-    class GameManagerPatch
+    public class GameManagerPatch
     {
+        public delegate void GameStartCallback();
+        public delegate void PlayerCommandCallback(ChatCommand message);
+
+        public static GameStartCallback OnStartGame;
+        public static PlayerCommandCallback OnPlayerCommand;
+
         [HarmonyPostfix]
         [HarmonyPatch("StartGame")]
-        static void StartGame() => BeppyServer.OnStartGame();
+        static void StartGame() => OnStartGame();
 
         [HarmonyPrefix]
         [HarmonyPatch("ChatMessageServer")]
@@ -24,22 +71,21 @@ namespace BeppyServer {
                 return true;
 
             ChatCommand message = new ChatCommand(_cInfo, _chatType, _senderEntityId, _msg, _mainName, _localizeMain, _recipientEntityIds);
-            BeppyServer.OnPlayerCommand(message);
+            OnPlayerCommand(message);
 
             // Commands don't get sent to players
             return false;
         }
     }
 
-    [HarmonyPatch(typeof(NetPackageManager))]
-    class NetPackageManagerPatch
+    [HarmonyPatch(typeof(World))]
+    class WorldPatch
     {
+        public delegate void SaveCallback();
+        public static SaveCallback OnSaveWorld;
+
         [HarmonyPrefix]
-        [HarmonyPatch("ParsePackage")]
-        public static bool ParsePackagePrefix(PooledBinaryReader _reader, ClientInfo _sender, ref NetPackage __result)
-        {
-            BeppyServer.OnParsePackage(_reader, _sender, ref __result);
-            return true;
-        }
+        [HarmonyPatch("Cleanup")]
+        static void Cleanup() => OnSaveWorld();
     }
 }

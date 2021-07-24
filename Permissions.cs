@@ -3,28 +3,6 @@ using System.Collections.Generic;
 using System.IO;
 using SimpleJSON;
 
-/*
- *  PERMISSIONS DOCUMENT EXAMPLE STRUCTURE
- *  
- *  {
- *      "groups": {
- *          "groupName": {
- *              "permissions": [
- *                  "cmdBan", "cmdKick"
- *              ]
- *          }
- *      },
- *      
- *      "users": {
- *          "username": {
- *              "steamId": "steamId",
- *              "group": "groupName",
- *              "additionalPermissions": []
- *          }
- *      }
- *  }
- */
-
 namespace BeppyServer {
     public class PermissionException : Exception
     {
@@ -36,21 +14,27 @@ namespace BeppyServer {
     {
         public List<string> permissions = new List<string>();
 
-        public static PermissionGroup Deserialize(JSONObject obj)
+        public PermissionGroup(List<string> permissions)
         {
-            PermissionGroup group = new PermissionGroup
-            {
-                permissions = new List<string>()
-            };
-
-            var permissions = obj["permissions"];
-            foreach (JSONNode node in permissions)
-                group.permissions.Add(node.Value);
-
-            return group;
+            this.permissions = permissions;
         }
 
-        public JSONObject Serialize()
+        public PermissionGroup(params string[] perms)
+            : this(new List<string>(perms))
+        { }
+
+        public static PermissionGroup Deserialize(JSONObject obj)
+        {
+            var permGroup = new PermissionGroup();
+            
+            var permsJson = obj["permissions"];
+            foreach (JSONNode node in permsJson)
+                permGroup.permissions.Add(node.Value);
+
+            return permGroup;
+        }
+
+        public JSONObject serialize()
         {
             JSONObject groupObject = new JSONObject();
 
@@ -69,23 +53,31 @@ namespace BeppyServer {
         public string group;
         public List<string> additionalPermissions = new List<string>();
 
-        public static PermissionUser Deserialize(JSONObject obj)
+        public PermissionUser(string steamId, string group, List<string> additionalPermissions)
         {
-            PermissionUser user = new PermissionUser()
-            {
-                steamId = obj["steamId"].Value,
-                group = obj["group"].Value
-            };
-
-            user.additionalPermissions = new List<string>();
-            var permissions = obj["additionalPermissions"].AsArray;
-            foreach (JSONNode perm in permissions)
-                user.additionalPermissions.Add(perm.ToString());
-
-            return user;
+            this.steamId = steamId;
+            this.group = group;
+            this.additionalPermissions = new List<string>(additionalPermissions);
         }
 
-        public JSONObject Serialize()
+        public PermissionUser(string steamId, string group, params string[] additionalPermissions)
+            : this(steamId, group, new List<string>(additionalPermissions))
+        { }
+
+        public static PermissionUser Deserialize(JSONObject obj)
+        {
+            var steamId = obj["steamId"].Value;
+            var group = obj["group"].Value;
+
+            var additionalPermissions = new List<string>();
+            var permissions = obj["additionalPermissions"].AsArray;
+            foreach (JSONNode perm in permissions)
+                additionalPermissions.Add(perm.Value);
+
+            return new PermissionUser(steamId, group, additionalPermissions);
+        }
+
+        public JSONObject serialize()
         {
             JSONObject obj = new JSONObject();
             obj.Add("steamId", new JSONString(steamId));
@@ -100,25 +92,28 @@ namespace BeppyServer {
         }
     }
 
-    public static class Permissions
+    public class Permissions
     {
-        private static Dictionary<string, PermissionGroup> Groups = new Dictionary<string, PermissionGroup>();
-        private static Dictionary<string, PermissionUser> Users = new Dictionary<string, PermissionUser>();
+        private Dictionary<string, PermissionGroup> groups;
+        private Dictionary<string, PermissionUser> users;
+
+        private string fileName;
 
         // Loads PermissionDocument from Config.PermissionsFile
-        public static void Load()
+        public Permissions(string fileName)
         {
-            if (!File.Exists(Config.PermissionsFile))
-                SaveDefaultPermissions(Config.PermissionsFile);
+            groups = new Dictionary<string, PermissionGroup>();
+            users = new Dictionary<string, PermissionUser>();
 
-            Groups = new Dictionary<string, PermissionGroup>();
-            Users = new Dictionary<string, PermissionUser>();
+            this.fileName = fileName;
+            if (!File.Exists(fileName))
+                saveDefaultPermissions(fileName);
 
-            string serialized = File.ReadAllText(Config.PermissionsFile);
-            Deserialize(serialized);
+            string serialized = File.ReadAllText(fileName);
+            deserialize(serialized);
         }
 
-        public static void Deserialize(string serialized)
+        public void deserialize(string serialized)
         {
             JSONNode rootNode = JSON.Parse(serialized);
 
@@ -126,22 +121,22 @@ namespace BeppyServer {
             var users = rootNode["users"];
 
             foreach (var pair in groups.AsObject)
-                Groups.Add(pair.Key, PermissionGroup.Deserialize(pair.Value.AsObject));
+                this.groups.Add(pair.Key, PermissionGroup.Deserialize(pair.Value.AsObject));
 
             foreach (var pair in users.AsObject)
-                Users.Add(pair.Key, PermissionUser.Deserialize(pair.Value.AsObject));
+                this.users.Add(pair.Key, PermissionUser.Deserialize(pair.Value.AsObject));
         }
 
-        public static string Serialize()
+        public string serialize()
         {
             JSONObject groupObject = new JSONObject();
 
-            foreach (KeyValuePair<string, PermissionGroup> pair in Groups)
-                groupObject.Add(pair.Key, pair.Value.Serialize());
+            foreach (KeyValuePair<string, PermissionGroup> pair in groups)
+                groupObject.Add(pair.Key, pair.Value.serialize());
 
             JSONObject userObject = new JSONObject();
-            foreach (KeyValuePair<string, PermissionUser> pair in Users)
-                userObject.Add(pair.Key, pair.Value.Serialize());
+            foreach (KeyValuePair<string, PermissionUser> pair in users)
+                userObject.Add(pair.Key, pair.Value.serialize());
 
             JSONNode rootNode = new JSONObject();
             rootNode.Add("groups", groupObject);
@@ -149,37 +144,25 @@ namespace BeppyServer {
             return rootNode.ToString(4);
         }
 
-        public static void SaveDefaultPermissions(string permissionsFile)
+        public void saveDefaultPermissions(string permissionsFile)
         {
-            PermissionGroup admin = new PermissionGroup()
-            {
-                permissions = new List<string>() { "all" }
-            };
+            PermissionGroup admin = new PermissionGroup("all");
+            PermissionGroup user = new PermissionGroup();
+            PermissionUser blankUser = new PermissionUser("0", "admin");
 
-            PermissionGroup user = new PermissionGroup()
-            {
-                permissions = new List<string>()
-            };
+            groups.Add("admin", admin);
+            groups.Add("user", user);
+            users.Add("admin", blankUser);
 
-            PermissionUser blankUser = new PermissionUser()
-            {
-                steamId = "0",
-                group = "admin"
-            };
-
-            Groups.Add("admin", admin);
-            Groups.Add("user", user);
-            Users.Add("admin", blankUser);
-
-            Save();
+            save();
         }
 
         // Expensive. Do not use unless server is experiencing downtime or is restarting/shuttingdown
-        public static void Save()
+        public void save()
         {
             try
             {
-                File.WriteAllText(Config.PermissionsFile, Serialize());
+                File.WriteAllText(fileName, serialize());
             }
             catch (Exception e)
             {
@@ -187,142 +170,114 @@ namespace BeppyServer {
             }
         }
 
-        public static void AddGroup(string groupName)
+        public void addUser(string name, string steamId, string group, params string[] additionalPermissions)
         {
-            if (Groups.ContainsKey(groupName))
+            users.Add(name, new PermissionUser(steamId, group, additionalPermissions));
+        }
+
+        public void addGroup(string groupName)
+        {
+            if (groups.ContainsKey(groupName))
                 throw new PermissionException($"Group {groupName} already exists.");
 
-            Groups.Add(groupName, CreateDefaultGroup());
+            groups.Add(groupName, new PermissionGroup());
         }
 
-        private static PermissionGroup CreateDefaultGroup()
+        public void addPermissionToUser(string name, string permission)
         {
-            PermissionGroup group = new PermissionGroup
-            {
-                permissions = new List<string>()
-            };
-            return group;
-        }
-
-        public static void CreateNewUser(string name, string steamId, string group = "user", params string[] additionalPermissions)
-        {
-            PermissionUser user = new PermissionUser
-            {
-                steamId = steamId,
-                group = group,
-                additionalPermissions = new List<string>(additionalPermissions)
-            };
-
-            Users.Add(name, user);
-        }
-
-        public static void AddPermissionToUser(string name, string permission)
-        {
-            if (!Users.ContainsKey(name))
+            if (!users.ContainsKey(name) || users[name] == null)
                 throw new PermissionException($"Could not find user {name}");
 
-            if (Users[name] == null)
-                Users.Add(name, new PermissionUser());
-
-            if (Users[name].additionalPermissions == null)
+            if (users[name].additionalPermissions == null)
             {
-                Users[name].additionalPermissions = new List<string>() { permission };
+                users[name].additionalPermissions = new List<string>() { permission };
                 return;
             }
 
-            Users[name].additionalPermissions.Add(permission);
+            users[name].additionalPermissions.Add(permission);
         }
 
-        public static void AddUserToGroup(string name, string groupName)
+        public void setUserGroup(string name, string groupName)
         {
-            if (!Users.ContainsKey(name))
+            if (!users.ContainsKey(name))
                 throw new PermissionException($"Could not find user {name}");
 
-            Users[name].group = groupName;
+            users[name].group = groupName;
         }
 
-        private static string LookupBySteamId(string steamId)
+        private string lookupBySteamId(string steamId)
         {
-            foreach (KeyValuePair<string, PermissionUser> pair in Users)
+            foreach (KeyValuePair<string, PermissionUser> pair in users)
                 if (pair.Value.steamId.ToLower().Equals(steamId.ToLower()))
                     return pair.Key;
 
             throw new PermissionException($"Could not find user by steamId {steamId}");
         }
 
-        public static void AddPermissionToGroup(string groupName, string permission)
+        public void addPermissionToGroup(string groupName, string permission)
         {
-            if (!Groups.ContainsKey(groupName))
+            if (!groups.ContainsKey(groupName))
                 throw new PermissionException($"Group name \"{groupName}\" does not exist.");
 
-            // Hopefully this never actually happens, but just in case...
-            if (Groups[groupName].permissions == null)
-            {
-                Groups[groupName].permissions = new List<string>() { permission };
-                return;
-            }
-
-            Groups[groupName].permissions.Add(permission);
+            groups[groupName].permissions.Add(permission);
         }
 
-        public static bool GroupHasPermission(string groupName, string permission)
+        public bool groupHasPermission(string groupName, string permission)
         {
-            if (!Groups.ContainsKey(groupName))
+            if (!groups.ContainsKey(groupName))
                 return false;
 
-            if (Groups[groupName].permissions == null)
+            if (groups[groupName].permissions == null)
                 return false;
 
-            return Groups[groupName].permissions.Contains(permission) || Groups[groupName].permissions.Contains("all");
+            return groups[groupName].permissions.Contains(permission)
+                || groups[groupName].permissions.Contains("all");
         }
 
-        public static bool UserHasPermission(string name, string permission)
+        public bool userHasPermission(string name, string permission)
         {
-            if (!Users.ContainsKey(name))
+            if (!users.ContainsKey(name))
                 return false;
 
-            if (Users[name].additionalPermissions != null)
-                if (Users[name].additionalPermissions.Contains(permission) || Users[name].additionalPermissions.Contains("all"))
+            if (users[name].additionalPermissions != null)
+                if (users[name].additionalPermissions.Contains(permission) || users[name].additionalPermissions.Contains("all"))
                     return true;
 
-            return GroupHasPermission(Users[name].group, permission);
+            return groupHasPermission(users[name].group, permission);
         }
 
-        public static void RemovePermissionFromGroup(string groupName, string permission)
+        public void removePermissionFromGroup(string groupName, string permission)
         {
-            if (!Groups.ContainsKey(groupName))
+            if (!groups.ContainsKey(groupName))
                 throw new PermissionException($"Group {groupName} does not exist.");
 
-            if (Groups[groupName].permissions == null)
-                return;
-
-            Groups[groupName].permissions.Remove(permission);
+            groups[groupName].permissions.Remove(permission);
         }
 
-        public static bool IsUserInGroup(string name, string groupName)
+        public bool isUserInGroup(string name, string groupName)
         {
-            if (!Users.ContainsKey(name))
+            if (!users.ContainsKey(name))
                 throw new PermissionException($"User {name} does not exist.");
 
-            return Users[name].group.ToLower().Equals(groupName.ToLower());
+            return users[name].group.ToLower().Equals(groupName.ToLower());
         }
 
-        public static bool DoesUserExist(string name) => Users.ContainsKey(name);
+        public bool doesUserExist(string name) => users.ContainsKey(name);
 
-        public static List<string> GetGroupPermissions(string groupName)
+        public List<string> getGroupPermissions(string groupName)
         {
-            if (!Groups.ContainsKey(groupName))
+            if (!groups.ContainsKey(groupName))
                 throw new PermissionException($"Group {groupName} does not exist.");
 
-            return Groups[groupName].permissions;
+            return groups[groupName].permissions;
         }
 
-        public static List<string> GetUserPermissions(string name)
+        public List<string> getUserPermissions(string name)
         {
-            if (!Users.ContainsKey(name))
+            if (!users.ContainsKey(name))
                 throw new PermissionException($"User {name} does not exist.");
 
-            return Users[name].additionalPermissions;
+            return users[name].additionalPermissions;
         }
     }
 }
