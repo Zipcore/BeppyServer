@@ -84,7 +84,7 @@
     <Compile Include="BeppyLogType.cs" />
     <Compile Include="BeppyServer.cs" />
     <Compile Include="BeppyWebServer.cs" />
-    <Compile Include="LinuxConsole.cs" />
+    <Compile Include="Native\LinuxConsole.cs" />
     <Compile Include="Patches\ControlPanelPatch.cs" />
     <Compile Include="Patches\WebServerPatch.cs" />
     <Compile Include="ChatCommand.cs" />
@@ -96,10 +96,10 @@
     <Compile Include="Patches\WorldPatch.cs" />
     <Compile Include="Permissions.cs" />
     <Compile Include="SimpleJSON.cs" />
-    <Compile Include="SystemConsole.cs" />
+    <Compile Include="Native\SystemConsole.cs" />
     <Compile Include="UnityUtility.cs" />
     <Compile Include="Patches\WFCPatch.cs" />
-    <Compile Include="WindowsConsole.cs" />
+    <Compile Include="Native\WindowsConsole.cs" />
     <Compile Include="WorldManager.cs" />
   </ItemGroup>
   <ItemGroup>
@@ -109,4 +109,8 @@
   <ProjectExtensions>
     <VisualStudio AllowExistingFolder="true" />
   </ProjectExtensions>
+  <PropertyGroup>
+    <PreBuildEvent>
+    </PreBuildEvent>
+  </PropertyGroup>
 </Project>

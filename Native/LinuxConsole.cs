@@ -4,7 +4,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 
-namespace BeppyServer
+namespace BeppyServer.Native
 {
     class LinuxConsole : SystemConsole
     {

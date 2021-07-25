@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using HarmonyLib;
+using BeppyServer.Native;
 
 #if WIN32
 namespace BeppyServer.Patches

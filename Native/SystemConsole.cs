@@ -1,6 +1,6 @@
-﻿namespace BeppyServer
+﻿namespace BeppyServer.Native
 {
-    abstract class SystemConsole
+    public abstract class SystemConsole
     {
         public abstract void Log(BeppyLogType level, string message);
         public abstract void Translate(BeppyLogType type, ref string message);

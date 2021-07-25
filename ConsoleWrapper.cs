@@ -1,10 +1,11 @@
 ﻿using BepInEx.Logging;
 using System;
 using System.Text.RegularExpressions;
+using BeppyServer.Native;
 
 namespace BeppyServer
 {
-    class Console
+    public static class Console
     {
         private const string LOG_TIME_PATTERN = @"([0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}:[0-9]{2}\s+[0-9]+.[0-9]{3}\s+(INF|WRN|ERR)\s+)";
 
