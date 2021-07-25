@@ -81,6 +81,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Admin.cs" />
+    <Compile Include="BeppyCluster.cs" />
     <Compile Include="BeppyLogType.cs" />
     <Compile Include="BeppyServer.cs" />
     <Compile Include="BeppyWebServer.cs" />
@@ -95,6 +96,7 @@
     <Compile Include="Patches\GameStateManagerPatch.cs" />
     <Compile Include="Patches\WorldPatch.cs" />
     <Compile Include="Permissions.cs" />
+    <Compile Include="Player.cs" />
     <Compile Include="SimpleJSON.cs" />
     <Compile Include="Native\SystemConsole.cs" />
     <Compile Include="UnityUtility.cs" />

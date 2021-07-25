@@ -5,21 +5,25 @@ namespace BeppyServer {
     {
         public ClientInfo Sender;
         public EChatType ChatType;
+
         public int EntityId;
+        public string PlayerName;
+        public string SteamId => Sender.playerId;
+
         public string BaseMessage;
         public string Command;
         public List<string> Args;
-        public string PlayerName;
         private List<int> recipientEntityIds;
 
+        // Handles command parsing
         public ChatCommand(ClientInfo cInfo, EChatType chatType, int senderEntityId,
             string msg, string mainName, bool localizeMain, List<int> recipientEntityIds)
         {
             Sender = cInfo;
             ChatType = chatType;
             EntityId = senderEntityId;
-            BaseMessage = msg;
             PlayerName = mainName;
+            BaseMessage = msg;
 
             this.recipientEntityIds = recipientEntityIds;
 

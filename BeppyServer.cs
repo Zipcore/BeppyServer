@@ -4,6 +4,7 @@ using System;
 using System.Collections.Generic;
 using BepInEx.Configuration;
 using BeppyServer.Patches;
+using System.IO;
 
 namespace BeppyServer
 {
@@ -19,30 +20,79 @@ namespace BeppyServer
 
         public static BeppyServer Instance;
 
-        private ConfigEntry<string> permissionsFile;
-        private ConfigEntry<string[]> clusterServers; // TODO
-
         private Permissions permissions;
+        private BeppyCluster cluster;
+
+        private ConfigEntry<bool> useClusterPermissions;
+        private ConfigEntry<string> clusterFile;
+        private ConfigEntry<string> permissionsFile;
+
+        private static string GetCommandLineArg(string name, bool hasvalue=true)
+        {
+            var args = Environment.GetCommandLineArgs();
+            foreach (var arg in args)
+            {
+                if (arg.ContainsCaseInsensitive(name))
+                {
+                    if (!hasvalue) return arg;
+                    string[] kv = arg.Split('=');
+                    if (kv.Length > 1)
+                        return kv[1];
+                }
+            }
+
+            return null;
+        }
 
         public void Awake()
         {
             Instance = this;
             Console.BeppyConsole = Logger;
+            permissions = new Permissions();
+            cluster = new BeppyCluster();
+
+            clusterFile = Config.Bind("General", "Cluster File", "cluster.json");
+            permissionsFile = Config.Bind("General", "Permissions File", "permissions.json");
+            useClusterPermissions = Config.Bind("Cluster", "Use Cluster Permissions", false);
+
+            new Harmony("beppyserver").PatchAll();
+
             GameManagerPatch.OnStartGame += OnStartGame;
             GameManagerPatch.OnPlayerCommand += OnPlayerCommand;
             GameStateManagerPatch.OnStartGameFinished += OnStartGameFinished;
             WorldPatch.OnSaveWorld += OnSaveWorld;
 
-            permissionsFile = Config.Bind(
-                "General",
-                "Permissions File",
-                "permissions.json",
-                "The file for which player permissions are written to and read from."
-            );
+            // CommandLine Arg: -clusterfile=<filename>
+            // If specified then the server will use the filename as the cluster file.
+            string clusterFileArg = GetCommandLineArg("clusterfile");
 
-            permissions = new Permissions(permissionsFile.Value);
-            var harmony = new Harmony("beppyserver");
-            harmony.PatchAll();
+            // CommandLine Arg: -permissionsfile=<filename>
+            // If specified then the server will use the filename as the permissions file.
+            string permissionsFileArg = GetCommandLineArg("permissionsfile");
+
+            // CommandLine Arg: -useclusterpermissions
+            // If specified then the server will use permissions from the cluster instead of a file.
+            // Takes precedence over -permissionsfile arg
+            string useClusterPermissionsArg = GetCommandLineArg("useclusterpermissions", false);
+
+            // IMPORTANT!! CommandLine Args take precedence over BepInEx's config file (beppyserver.cfg).
+            if (clusterFileArg != null)
+                clusterFile.Value = clusterFileArg;
+
+            if (permissionsFileArg != null)
+                permissionsFile.Value = permissionsFileArg;
+
+            if (useClusterPermissionsArg != null)
+                useClusterPermissions.Value = true;
+
+            bool shouldLoadFromCluster = useClusterPermissionsArg != null
+                || (permissionsFileArg == null && useClusterPermissions.Value);
+
+            cluster.LoadFromFile(clusterFile.Value);
+            if (shouldLoadFromCluster)
+                permissions.LoadFromCluster(cluster);
+            else
+                permissions.LoadFromFile(permissionsFile.Value);
 
             Console.Log("BeppyServer Loaded!");
         }
@@ -63,19 +113,23 @@ namespace BeppyServer
         public void OnSaveWorld()
         {
             Console.Log("Saving permissions.");
-            permissions.save();
+
+            if (cluster.IsHandlingPermissions)
+                permissions.SaveToCluster(cluster);
+            else
+                permissions.SaveToFile(permissionsFile.Value);
         }
 
         // When the client has spawned he will have both an entityId and playerName.
         private void OnClientSpawned(ClientInfo obj)
         {
-            var playerName = obj.playerName;
             var steamId = obj.playerId;
+            var name = obj.playerName;
 
-            if (!permissions.doesUserExist(playerName))
+            if (permissions.GetPlayerBySteamId(steamId) == null)
             {
-                Console.Log($"This is {playerName}'s first time playing. Creating permissions.");
-                permissions.addUser(playerName, steamId, "users");
+                Console.Log($"This is {name}'s first time playing. Creating permissions.");
+                permissions.AddPlayer(new Player(steamId, name, "user"));
             }
         }
 
@@ -100,7 +154,10 @@ namespace BeppyServer
             try
             {
                 PlayerCommand command = Commands.GetCommand(message.Command);
-                if (permissions.userHasPermission(message.PlayerName, command.permission))
+                Player p = permissions.GetPlayerByName(message.PlayerName);
+                
+                if (permissions.GroupHasPermission(p.Group, command.permission)
+                    || p.HasPermission(command.permission))
                     command.Execute(message.Sender, message.Args);
                 else
                     SendMessage(message.Sender, "You do not have permission to use that command.");
