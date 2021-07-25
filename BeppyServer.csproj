@@ -84,6 +84,7 @@
     <Compile Include="BeppyLogType.cs" />
     <Compile Include="BeppyServer.cs" />
     <Compile Include="BeppyWebServer.cs" />
+    <Compile Include="LinuxConsole.cs" />
     <Compile Include="Patches\ControlPanelPatch.cs" />
     <Compile Include="Patches\WebServerPatch.cs" />
     <Compile Include="ChatCommand.cs" />
@@ -98,6 +99,7 @@
     <Compile Include="SystemConsole.cs" />
     <Compile Include="UnityUtility.cs" />
     <Compile Include="Patches\WFCPatch.cs" />
+    <Compile Include="WindowsConsole.cs" />
     <Compile Include="WorldManager.cs" />
   </ItemGroup>
   <ItemGroup>

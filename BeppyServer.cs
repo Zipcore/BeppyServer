@@ -7,7 +7,6 @@ using BeppyServer.Patches;
 
 namespace BeppyServer
 {
-
     [BepInPlugin("beppyserver", "BeppyServer", "1.0.0.0")]
     public class BeppyServer : BaseUnityPlugin {
 
