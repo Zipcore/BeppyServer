@@ -3,6 +3,7 @@ using HarmonyLib;
 using System;
 using System.Collections.Generic;
 using BepInEx.Configuration;
+using BeppyServer.Patches;
 
 namespace BeppyServer
 {
@@ -27,10 +28,11 @@ namespace BeppyServer
         public void Awake()
         {
             Instance = this;
+            Console.BeppyConsole = Logger;
             GameManagerPatch.OnStartGame += OnStartGame;
             GameManagerPatch.OnPlayerCommand += OnPlayerCommand;
+            GameStateManagerPatch.OnStartGameFinished += OnStartGameFinished;
             WorldPatch.OnSaveWorld += OnSaveWorld;
-            Console.BeppyConsole = Logger;
 
             permissionsFile = Config.Bind(
                 "General",
@@ -52,7 +54,10 @@ namespace BeppyServer
             ConnectionManager.OnClientAdded += Instance.OnClientAdded;
             ConnectionManager.OnClientDisconnected += Instance.OnClientDisconnected;
             GameManager.Instance.OnClientSpawned += Instance.OnClientSpawned;
+        }
 
+        public void OnStartGameFinished()
+        {
             Console.Log("OnStartGame Called");
         }
 
@@ -84,11 +89,9 @@ namespace BeppyServer
             var playerName = _clientInfo.playerName;
         }
 
-        public void SendMessage(int entityId, string message)
+        public void SendMessage(ClientInfo client, string message)
         {
-            // Is not the null message we're getting from sending command
-            // but we're also not getting any message.
-            GameManager.Instance.ChatMessageClient(EChatType.Whisper, 0, message, "Server", false, new List<int>() { entityId });
+            GameManager.Instance.ChatMessageServer(client, EChatType.Whisper, client.entityId, message, "Server", false, new List<int>() { client.entityId });
         }
 
         public void OnPlayerCommand(ChatCommand message)
@@ -101,12 +104,12 @@ namespace BeppyServer
                 if (permissions.userHasPermission(message.PlayerName, command.permission))
                     command.Execute(message.Sender, message.Args);
                 else
-                    SendMessage(message.EntityId, "You do not have permission to use that command.");
+                    SendMessage(message.Sender, "You do not have permission to use that command.");
             }
             catch (Exception e)
             {
                 if (e is CommandArgsException || e is InvalidCommandException)
-                    SendMessage(message.EntityId, e.Message);
+                    SendMessage(message.Sender, e.Message);
                 else
                     Console.Exception(e);
             }

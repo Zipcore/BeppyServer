@@ -83,15 +83,21 @@
     <Compile Include="Admin.cs" />
     <Compile Include="BeppyLogType.cs" />
     <Compile Include="BeppyServer.cs" />
+    <Compile Include="BeppyWebServer.cs" />
+    <Compile Include="Patches\ControlPanelPatch.cs" />
+    <Compile Include="Patches\WebServerPatch.cs" />
     <Compile Include="ChatCommand.cs" />
     <Compile Include="Commands.cs" />
     <Compile Include="ConsoleWrapper.cs" />
     <Compile Include="INetPackage.cs" />
-    <Compile Include="Patches.cs" />
+    <Compile Include="Patches\GameManagerPatch.cs" />
+    <Compile Include="Patches\GameStateManagerPatch.cs" />
+    <Compile Include="Patches\WorldPatch.cs" />
     <Compile Include="Permissions.cs" />
     <Compile Include="SimpleJSON.cs" />
     <Compile Include="SystemConsole.cs" />
     <Compile Include="UnityUtility.cs" />
+    <Compile Include="Patches\WFCPatch.cs" />
     <Compile Include="WorldManager.cs" />
   </ItemGroup>
   <ItemGroup>
