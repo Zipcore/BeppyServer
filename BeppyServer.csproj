@@ -29,6 +29,14 @@
   <PropertyGroup>
     <RootNamespace>BeppyServer</RootNamespace>
   </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Win32|AnyCPU'">
+    <OutputPath>bin\Win32\</OutputPath>
+    <DefineConstants>WIN32</DefineConstants>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Linux|AnyCPU'">
+    <OutputPath>bin\Linux\</OutputPath>
+    <DefineConstants>LINUX</DefineConstants>
+  </PropertyGroup>
   <ItemGroup>
     <Reference Include="0Harmony">
       <HintPath>libs\0Harmony.dll</HintPath>

@@ -1,7 +1,9 @@
 ﻿using System;
 using System.Diagnostics;
-using System.Text;
+
+#if WIN32
 using System.Windows.Forms;
+#endif
 
 namespace BeppyServer
 {
@@ -11,14 +13,13 @@ namespace BeppyServer
         public abstract void Translate(BeppyLogType type, ref string message);
     }
 
+#if LINUX
     class UnixConsole : SystemConsole
     {
         // We don't know what the object is yet.
-        private static GUIWindowConsole console;
         public override void Log(BeppyLogType level, string message)
         {
-
-            console.AddLine(message);
+            SdtdConsole.print(message);
         }
 
         public override void Translate(BeppyLogType type, ref string message)
@@ -26,7 +27,9 @@ namespace BeppyServer
             throw new NotImplementedException();
         }
     }
+#endif
 
+#if WIN32
     class WindowsConsole : SystemConsole
     {
         private WinFormConnection FormInstance;
@@ -50,4 +53,5 @@ namespace BeppyServer
             message = $"{DateTime.Now:g} {type} {message}";
         }
     }
+#endif
 }

@@ -4,6 +4,8 @@ using System.Collections.Generic;
 using BepInEx.Logging;
 
 namespace BeppyServer {
+
+#if WIN32
     [HarmonyPatch(typeof(WinFormConnection))]
     public class WinFormConnectionPatch
     {
@@ -43,7 +45,7 @@ namespace BeppyServer {
             return false;
         }
     }
-
+#endif
 
     [HarmonyPatch(typeof(GameManager))]
     public class GameManagerPatch
