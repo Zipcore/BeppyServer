@@ -1,5 +1,5 @@
-﻿using System.Collections.Generic;
-using SimpleJSON;
+﻿using BepInEx;
+using BepInEx.Configuration;
 
 namespace BeppyServer
 {
@@ -18,15 +18,21 @@ namespace BeppyServer
     {
         public bool IsHandlingPermissions { get; set; }
 
-        private string serverName;
-        private string databaseType;
-        private string dbIp;
-        private string dbUsername;
-        private string dbPassword;
+        private ConfigEntry<string> serverName;
+        private ConfigEntry<string> databaseType;
+        private ConfigEntry<string> dbIp;
+        private ConfigEntry<string> dbUsername;
+        private ConfigEntry<string> dbPassword;
+        private ConfigEntry<bool> handlePermissions;
 
-        public void LoadFromFile(string fileName)
+        public BeppyCluster(ConfigFile Config)
         {
-
+            serverName = Config.Bind("Cluster", "LocalServerName", "7 Days to Die Server");
+            databaseType = Config.Bind("Cluster", "DatabaseType", "MongoDB");
+            dbIp = Config.Bind("Cluster", "DatabaseIP", "127.0.0.1:27017");
+            dbUsername = Config.Bind("Cluster", "DatabaseUsername", "");
+            dbPassword = Config.Bind("Cluster", "DatabasePassword", "");
+            handlePermissions = Config.Bind("Cluster", "UseClusterPermissions", false);
         }
     }
 }

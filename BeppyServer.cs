@@ -23,8 +23,6 @@ namespace BeppyServer
         private Permissions permissions;
         private BeppyCluster cluster;
 
-        private ConfigEntry<bool> useClusterPermissions;
-        private ConfigEntry<string> clusterFile;
         private ConfigEntry<string> permissionsFile;
 
         private static string GetCommandLineArg(string name, bool hasvalue=true)
@@ -48,12 +46,11 @@ namespace BeppyServer
         {
             Instance = this;
             Console.BeppyConsole = Logger;
-            permissions = new Permissions();
-            cluster = new BeppyCluster();
 
-            clusterFile = Config.Bind("General", "Cluster File", "cluster.json");
-            permissionsFile = Config.Bind("General", "Permissions File", "permissions.json");
-            useClusterPermissions = Config.Bind("Cluster", "Use Cluster Permissions", false);
+            permissionsFile = Config.Bind("General", "PermissionsFile", "permissions.json");
+
+            permissions = new Permissions();
+            cluster = new BeppyCluster(Config);
 
             new Harmony("beppyserver").PatchAll();
 
@@ -61,10 +58,6 @@ namespace BeppyServer
             GameManagerPatch.OnPlayerCommand += OnPlayerCommand;
             GameStateManagerPatch.OnStartGameFinished += OnStartGameFinished;
             WorldPatch.OnSaveWorld += OnSaveWorld;
-
-            // CommandLine Arg: -clusterfile=<filename>
-            // If specified then the server will use the filename as the cluster file.
-            string clusterFileArg = GetCommandLineArg("clusterfile");
 
             // CommandLine Arg: -permissionsfile=<filename>
             // If specified then the server will use the filename as the permissions file.
@@ -76,20 +69,18 @@ namespace BeppyServer
             string useClusterPermissionsArg = GetCommandLineArg("useclusterpermissions", false);
 
             // IMPORTANT!! CommandLine Args take precedence over BepInEx's config file (beppyserver.cfg).
-            if (clusterFileArg != null)
-                clusterFile.Value = clusterFileArg;
-
-            if (permissionsFileArg != null)
-                permissionsFile.Value = permissionsFileArg;
-
             if (useClusterPermissionsArg != null)
-                useClusterPermissions.Value = true;
-
-            bool shouldLoadFromCluster = useClusterPermissionsArg != null
-                || (permissionsFileArg == null && useClusterPermissions.Value);
-
-            cluster.LoadFromFile(clusterFile.Value);
-            if (shouldLoadFromCluster)
+            {
+                cluster.IsHandlingPermissions = true;
+                permissions.LoadFromCluster(cluster);
+            }
+            else if (permissionsFileArg != null)
+            {
+                permissionsFile.Value = permissionsFileArg;
+                permissions.LoadFromFile(permissionsFile.Value);
+                cluster.IsHandlingPermissions = false;
+            }
+            else if (cluster.IsHandlingPermissions)
                 permissions.LoadFromCluster(cluster);
             else
                 permissions.LoadFromFile(permissionsFile.Value);

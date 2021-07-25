@@ -73,6 +73,11 @@ namespace BeppyServer {
                 this.players.Add(Player.Deserialize(pair.Value.AsObject));
         }
 
+        public void LoadFromCluster(BeppyCluster cluster)
+        {
+
+        }
+
         public Player GetPlayerByName(string name)
         {
             foreach (var player in players)
@@ -90,11 +95,6 @@ namespace BeppyServer {
         }
 
         public void AddPlayer(Player player) => players.Add(player);
-
-        public void LoadFromCluster(BeppyCluster cluster)
-        {
-
-        }
 
         public void SaveDefaultPermissions(string permissionsFile)
         {
