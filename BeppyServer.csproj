@@ -1,118 +1,54 @@
-﻿<Project ToolsVersion="4.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+﻿<Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
-    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
-    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
-    <ProjectGuid>{82ADB1AF-333C-4CA0-B2C1-224AA21AE5E1}</ProjectGuid>
+    <ProjectGuid>{8665D258-5011-4E1C-886D-DA82C4F5F4DC}</ProjectGuid>
     <OutputType>Library</OutputType>
     <NoStandardLibraries>false</NoStandardLibraries>
     <AssemblyName>BeppyServer</AssemblyName>
-    <TargetFrameworkVersion>v4.0</TargetFrameworkVersion>
+    <TargetFramework>netcoreapp3.1</TargetFramework>
     <FileAlignment>512</FileAlignment>
+    <Configurations>Win32;Linux</Configurations>
   </PropertyGroup>
-  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
-    <DebugSymbols>true</DebugSymbols>
-    <DebugType>full</DebugType>
-    <Optimize>false</Optimize>
-    <OutputPath>bin\Debug\</OutputPath>
-    <DefineConstants>DEBUG;TRACE</DefineConstants>
-    <ErrorReport>prompt</ErrorReport>
-    <WarningLevel>4</WarningLevel>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Win32|AnyCPU'">
+	<OutputPath>bin\Win32\</OutputPath>
+	<DefineConstants>WIN32</DefineConstants>
   </PropertyGroup>
-  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
-    <DebugType>pdbonly</DebugType>
-    <Optimize>true</Optimize>
-    <OutputPath>bin\Release\</OutputPath>
-    <DefineConstants>TRACE</DefineConstants>
-    <ErrorReport>prompt</ErrorReport>
-    <WarningLevel>4</WarningLevel>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Linux|AnyCPU'">
+	<OutputPath>bin\Linux\</OutputPath>
+	<DefineConstants>LINUX</DefineConstants>
   </PropertyGroup>
   <PropertyGroup>
     <RootNamespace>BeppyServer</RootNamespace>
   </PropertyGroup>
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Win32|AnyCPU'">
-    <OutputPath>bin\Win32\</OutputPath>
-    <DefineConstants>WIN32</DefineConstants>
-  </PropertyGroup>
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Linux|AnyCPU'">
-    <OutputPath>bin\Linux\</OutputPath>
-    <DefineConstants>LINUX</DefineConstants>
-  </PropertyGroup>
-  <ItemGroup>
-    <Reference Include="0Harmony">
-      <HintPath>libs\0Harmony.dll</HintPath>
-      <Private>False</Private>
-    </Reference>
-    <Reference Include="Assembly-CSharp">
-      <HintPath>libs\Assembly-CSharp.dll</HintPath>
-      <Private>False</Private>
-    </Reference>
-    <Reference Include="Assembly-CSharp-firstpass">
-      <HintPath>libs\Assembly-CSharp-firstpass.dll</HintPath>
-      <Private>False</Private>
-    </Reference>
-    <Reference Include="BepInEx">
-      <HintPath>libs\BepInEx.dll</HintPath>
-      <Private>False</Private>
-    </Reference>
-    <Reference Include="BepInEx.Harmony">
-      <HintPath>libs\BepInEx.Harmony.dll</HintPath>
-      <Private>False</Private>
-    </Reference>
-    <Reference Include="HarmonyXInterop">
-      <HintPath>libs\HarmonyXInterop.dll</HintPath>
-      <Private>False</Private>
-    </Reference>
-    <Reference Include="Microsoft.CSharp" />
-    <Reference Include="System" />
-    <Reference Include="System.Core" />
-    <Reference Include="System.Data" />
-    <Reference Include="System.Data.DataSetExtensions" />
-    <Reference Include="System.Windows.Forms" />
-    <Reference Include="System.Xml" />
-    <Reference Include="System.Xml.Linq" />
-    <Reference Include="UnityEngine">
-      <HintPath>libs\UnityEngine.dll</HintPath>
-      <Private>False</Private>
-    </Reference>
-    <Reference Include="UnityEngine.CoreModule">
-      <HintPath>libs\UnityEngine.CoreModule.dll</HintPath>
-      <Private>False</Private>
-    </Reference>
-  </ItemGroup>
-  <ItemGroup>
-    <Compile Include="Admin.cs" />
-    <Compile Include="BeppyCluster.cs" />
-    <Compile Include="BeppyLogType.cs" />
-    <Compile Include="BeppyServer.cs" />
-    <Compile Include="BeppyWebServer.cs" />
-    <Compile Include="Native\LinuxConsole.cs" />
-    <Compile Include="Patches\ControlPanelPatch.cs" />
-    <Compile Include="Patches\WebServerPatch.cs" />
-    <Compile Include="ChatCommand.cs" />
-    <Compile Include="Commands.cs" />
-    <Compile Include="ConsoleWrapper.cs" />
-    <Compile Include="INetPackage.cs" />
-    <Compile Include="Patches\GameManagerPatch.cs" />
-    <Compile Include="Patches\GameStateManagerPatch.cs" />
-    <Compile Include="Patches\WorldPatch.cs" />
-    <Compile Include="Permissions.cs" />
-    <Compile Include="Player.cs" />
-    <Compile Include="SimpleJSON.cs" />
-    <Compile Include="Native\SystemConsole.cs" />
-    <Compile Include="UnityUtility.cs" />
-    <Compile Include="Patches\WFCPatch.cs" />
-    <Compile Include="Native\WindowsConsole.cs" />
-    <Compile Include="WorldManager.cs" />
-  </ItemGroup>
-  <ItemGroup>
-    <Folder Include=".vs\BeppyServer\v16\" />
-  </ItemGroup>
-  <Import Project="$(MSBuildToolsPath)\Microsoft.CSHARP.Targets" />
   <ProjectExtensions>
     <VisualStudio AllowExistingFolder="true" />
   </ProjectExtensions>
-  <PropertyGroup>
-    <PreBuildEvent>
-    </PreBuildEvent>
-  </PropertyGroup>
+  <ItemGroup>
+    <Reference Include="0Harmony">
+      <HintPath>libs\0Harmony.dll</HintPath>
+    </Reference>
+    <Reference Include="Assembly-CSharp">
+      <HintPath>libs\Assembly-CSharp.dll</HintPath>
+    </Reference>
+    <Reference Include="Assembly-CSharp-firstpass">
+      <HintPath>libs\Assembly-CSharp-firstpass.dll</HintPath>
+    </Reference>
+    <Reference Include="BepInEx">
+      <HintPath>libs\BepInEx.dll</HintPath>
+    </Reference>
+    <Reference Include="BepInEx.Harmony">
+      <HintPath>libs\BepInEx.Harmony.dll</HintPath>
+    </Reference>
+    <Reference Include="HarmonyXInterop">
+      <HintPath>libs\HarmonyXInterop.dll</HintPath>
+    </Reference>
+    <Reference Include="System.Windows.Forms">
+      <HintPath>libs\System.Windows.Forms.dll</HintPath>
+    </Reference>
+    <Reference Include="UnityEngine">
+      <HintPath>libs\UnityEngine.dll</HintPath>
+    </Reference>
+    <Reference Include="UnityEngine.CoreModule">
+      <HintPath>libs\UnityEngine.CoreModule.dll</HintPath>
+    </Reference>
+  </ItemGroup>
 </Project>

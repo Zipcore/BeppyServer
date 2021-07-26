@@ -1,5 +1,6 @@
 ﻿using BepInEx;
 using BepInEx.Configuration;
+using System.Data.SqlClient;
 
 namespace BeppyServer
 {
@@ -28,10 +29,10 @@ namespace BeppyServer
         public BeppyCluster(ConfigFile Config)
         {
             serverName = Config.Bind("Cluster", "LocalServerName", "7 Days to Die Server");
-            databaseType = Config.Bind("Cluster", "DatabaseType", "MongoDB");
-            dbIp = Config.Bind("Cluster", "DatabaseIP", "127.0.0.1:27017");
+            databaseType = Config.Bind("Cluster", "DatabaseType", "SQLServer");
+            dbIp = Config.Bind("Cluster", "DatabaseIP", "127.0.0.1:1433");
             dbUsername = Config.Bind("Cluster", "DatabaseUsername", "");
-            dbPassword = Config.Bind("Cluster", "DatabasePassword", "");
+            dbPassword = Config.Bind("Cluster", "DatabasePassword", "Adm1n1strator");
             handlePermissions = Config.Bind("Cluster", "UseClusterPermissions", false);
         }
     }
