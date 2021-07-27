@@ -1,51 +1,48 @@
 ﻿using System;
+using System.Net;
 using HarmonyLib;
 
-namespace BeppyServer.Patches
-{
+namespace BeppyServer.Patches {
     [HarmonyPatch(typeof(WebServer))]
-    public class WebServerPatch
-    {
+    public class WebServerPatch {
         [HarmonyPostfix]
-        [HarmonyPatch(MethodType.Constructor, new Type[] { typeof(string[]), typeof(Func<System.Net.HttpListenerRequest, string>) })]
-        static void ConstructorPostfix(ref WebServer __instance, string[] prefixes, System.Func<System.Net.HttpListenerRequest, string> method)
-        {
+        [HarmonyPatch(MethodType.Constructor, typeof(string[]), typeof(Func<HttpListenerRequest, string>))]
+        private static void ConstructorPostfix(
+            ref WebServer __instance, string[] prefixes, Func<HttpListenerRequest, string> method
+        ) {
             Console.Log("WebServer Constructor1 Postfixed");
         }
 
         [HarmonyPostfix]
-        [HarmonyPatch(MethodType.Constructor, new Type[] { typeof(Func<System.Net.HttpListenerRequest, string>), typeof(string[]) })]
-        static void ConstructorPostfix(ref WebServer __instance, System.Func<System.Net.HttpListenerRequest, string> method, params string[] prefixes)
-        {
+        [HarmonyPatch(MethodType.Constructor, typeof(Func<HttpListenerRequest, string>), typeof(string[]))]
+        private static void ConstructorPostfix(
+            ref WebServer __instance, Func<HttpListenerRequest, string> method, params string[] prefixes
+        ) {
             Console.Log("WebServer Constructor2 Postfixed");
         }
 
         [HarmonyPrefix]
         [HarmonyPatch("Run")]
-        static void RunPrefix()
-        {
+        private static void RunPrefix() {
             Console.Log("Run Prefixed");
         }
 
 
         [HarmonyPostfix]
         [HarmonyPatch("Run")]
-        static void RunPostfix()
-        {
+        private static void RunPostfix() {
             Console.Log("Run Postfixed");
         }
 
         [HarmonyPrefix]
         [HarmonyPatch("Stop")]
-        static void StopPrefix()
-        {
+        private static void StopPrefix() {
             Console.Log("Stop Prefixed");
         }
 
         [HarmonyPostfix]
         [HarmonyPatch("Stop")]
-        static void StopPostfix()
-        {
+        private static void StopPostfix() {
             Console.Log("Stop Postfixed");
         }
     }

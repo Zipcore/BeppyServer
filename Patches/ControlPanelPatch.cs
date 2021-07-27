@@ -1,16 +1,14 @@
 ﻿using System.Collections.Generic;
 using HarmonyLib;
+using UnityEngine;
 
-namespace BeppyServer.Patches
-{
+namespace BeppyServer.Patches {
     // Created even AFTER the WebServer "Run" is postfixed
     [HarmonyPatch(typeof(ControlPanel))]
-    public class ControlPanelPatch
-    {
+    public class ControlPanelPatch {
         [HarmonyPostfix]
         [HarmonyPatch(MethodType.Constructor)]
-        static void ConstructorPostfix(ref ControlPanel __instance)
-        {
+        private static void ConstructorPostfix(ref ControlPanel __instance) {
             Console.Log("ControlPanel Constructor Postfixed");
         }
 
@@ -19,21 +17,14 @@ namespace BeppyServer.Patches
         // Having all these threads, though, the CPU is probably dying.
         [HarmonyPrefix]
         [HarmonyPatch("SendLine")]
-        static void SendLinePrefix(string _text)
-        {
-        }
+        private static void SendLinePrefix(string _text) { }
 
         [HarmonyPrefix]
         [HarmonyPatch("SendLines")]
-        static void SendLinesPrefix(List<string> _output)
-        {
-        }
+        private static void SendLinesPrefix(List<string> _output) { }
 
         [HarmonyPrefix]
         [HarmonyPatch("SendLog")]
-        static void SendLogPrefix(ref string _msg, string _trace, UnityEngine.LogType _type)
-        {
-
-        }
+        private static void SendLogPrefix(ref string _msg, string _trace, LogType _type) { }
     }
 }

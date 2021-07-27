@@ -2,15 +2,13 @@
 using System.Collections.Generic;
 
 namespace BeppyServer {
-    [AttributeUsage(AttributeTargets.Class, AllowMultiple = false)]
-    public class CommandAttribute : Attribute
-    {
-        public string name;
+    [AttributeUsage(AttributeTargets.Class)]
+    public class CommandAttribute : Attribute {
         public string description;
+        public string name;
         public string permission;
 
-        public CommandAttribute(string name, string permission, string description)
-        {
+        public CommandAttribute(string name, string permission, string description) {
             this.name = name;
             this.permission = permission;
             this.description = description;
@@ -18,35 +16,31 @@ namespace BeppyServer {
     }
 
     [AttributeUsage(AttributeTargets.Class, AllowMultiple = true)]
-    public class CommandAliasesAttribute : Attribute
-    {
+    public class CommandAliasesAttribute : Attribute {
         public string[] aliases;
-        public CommandAliasesAttribute(params string[] aliases)
-        {
+
+        public CommandAliasesAttribute(params string[] aliases) {
             this.aliases = aliases;
         }
     }
 
-    public class CommandArgsException : Exception
-    {
+    public class CommandArgsException : Exception {
         public CommandArgsException() : base("Invalid arguments.") { }
     }
 
-    public class InvalidCommandException : Exception
-    {
+    public class InvalidCommandException : Exception {
         public InvalidCommandException() : base("Invalid command.") { }
     }
 
-    public abstract class PlayerCommand
-    {
-        public string name;
-        public string description;
-        public string permission;
+    public abstract class PlayerCommand {
         public List<string> aliases;
+        public string description;
+        public string name;
+        public string permission;
 
-        public PlayerCommand()
-        {
-            CommandAttribute attr = (CommandAttribute)Attribute.GetCustomAttribute(GetType(), typeof(CommandAttribute));
+        public PlayerCommand() {
+            CommandAttribute attr
+                = (CommandAttribute) Attribute.GetCustomAttribute(GetType(), typeof(CommandAttribute));
             if (attr == null)
                 throw new Exception("Player command must include command attribute.");
 
@@ -55,7 +49,8 @@ namespace BeppyServer {
             description = attr.description;
             aliases = new List<string>();
 
-            CommandAliasesAttribute aliasAttr = (CommandAliasesAttribute)Attribute.GetCustomAttribute(GetType(), typeof(CommandAliasesAttribute));
+            CommandAliasesAttribute aliasAttr
+                = (CommandAliasesAttribute) Attribute.GetCustomAttribute(GetType(), typeof(CommandAliasesAttribute));
             if (aliasAttr != null)
                 aliases.AddRange(aliasAttr.aliases);
         }
@@ -63,10 +58,8 @@ namespace BeppyServer {
         public abstract void Execute(ClientInfo sender, List<string> args);
     }
 
-    public class Commands
-    {
-        static List<PlayerCommand> commands = new List<PlayerCommand>()
-        {
+    public class Commands {
+        private static readonly List<PlayerCommand> commands = new List<PlayerCommand> {
             new BanCommand(),
             new KickCommand(),
             new BalanceCommand(),
@@ -87,13 +80,11 @@ namespace BeppyServer {
             new VoteCommand(),
             new WhoCommand(),
             new OutputGameObjectsCommand(),
-            new OutputComponentsCommand(),
+            new OutputComponentsCommand()
         };
 
-        public static PlayerCommand GetCommand(string cmd)
-        {
-            foreach (PlayerCommand command in commands)
-            {
+        public static PlayerCommand GetCommand(string cmd) {
+            foreach (PlayerCommand command in commands) {
                 if (command.name.EqualsCaseInsensitive(cmd))
                     return command;
 
@@ -106,17 +97,14 @@ namespace BeppyServer {
     }
 
     [Command("ban", "cmdBan", "Permanently bans a player from the server.")]
-    public class BanCommand : PlayerCommand
-    {
-        public override void Execute(ClientInfo sender, List<string> args)
-        {
+    public class BanCommand : PlayerCommand {
+        public override void Execute(ClientInfo sender, List<string> args) {
             if (args.Count < 1)
                 throw new CommandArgsException();
 
-            var user = args[0];
+            string user = args[0];
 
-            GameUtils.KickPlayerData kickData = new GameUtils.KickPlayerData()
-            {
+            GameUtils.KickPlayerData kickData = new GameUtils.KickPlayerData {
                 reason = GameUtils.EKickReason.Banned,
                 banUntil = DateTime.MaxValue
             };
@@ -129,17 +117,14 @@ namespace BeppyServer {
     }
 
     [Command("kick", "cmdKick", "Forecfully disconnects a player from the server.")]
-    public class KickCommand : PlayerCommand
-    {
-        public override void Execute(ClientInfo sender, List<string> args)
-        {
+    public class KickCommand : PlayerCommand {
+        public override void Execute(ClientInfo sender, List<string> args) {
             if (args.Count < 1)
                 throw new CommandArgsException();
 
-            var user = args[0];
+            string user = args[0];
 
-            GameUtils.KickPlayerData kickData = new GameUtils.KickPlayerData()
-            {
+            GameUtils.KickPlayerData kickData = new GameUtils.KickPlayerData {
                 reason = GameUtils.EKickReason.ManualKick
             };
 
@@ -152,189 +137,151 @@ namespace BeppyServer {
 
     [Command("balance", "cmdBalance", "See your current balance")]
     [CommandAliases("bal", "wallet")]
-    public class BalanceCommand : PlayerCommand
-    {
-        public override void Execute(ClientInfo sender, List<string> args)
-        {
+    public class BalanceCommand : PlayerCommand {
+        public override void Execute(ClientInfo sender, List<string> args) {
             throw new NotImplementedException();
         }
     }
 
     [Command("calladmin", "cmdCallAdmin", "Make a support ticket")]
     [CommandAliases("admin", "admins", "support")]
-    public class CallAdminCommand : PlayerCommand
-    {
-        public override void Execute(ClientInfo sender, List<string> args)
-        {
+    public class CallAdminCommand : PlayerCommand {
+        public override void Execute(ClientInfo sender, List<string> args) {
             throw new NotImplementedException();
         }
     }
 
     [Command("claim", "cmdClaim", "Claim items you have bought in the shop")]
     [CommandAliases("claimitems")]
-    public class ClaimCommand : PlayerCommand
-    {
-        public override void Execute(ClientInfo sender, List<string> args)
-        {
+    public class ClaimCommand : PlayerCommand {
+        public override void Execute(ClientInfo sender, List<string> args) {
             throw new NotImplementedException();
         }
     }
 
     [Command("gimme", "cmdGimme", "Get a random item, command or entity.")]
     [CommandAliases("gimmie")]
-    public class GimmeCommand : PlayerCommand
-    {
-        public override void Execute(ClientInfo sender, List<string> args)
-        {
+    public class GimmeCommand : PlayerCommand {
+        public override void Execute(ClientInfo sender, List<string> args) {
             throw new NotImplementedException();
         }
     }
 
     [Command("help", "cmdHelp", "Get some help")]
-    public class HelpCommand : PlayerCommand
-    {
-        public override void Execute(ClientInfo sender, List<string> args)
-        {
+    public class HelpCommand : PlayerCommand {
+        public override void Execute(ClientInfo sender, List<string> args) {
             throw new NotImplementedException();
         }
     }
 
     [Command("listtele", "cmdListTele", "List teleport locations")]
     [CommandAliases("telelist", "teleslist", "listteles")]
-    public class ListTeleCommand : PlayerCommand
-    {
-        public override void Execute(ClientInfo sender, List<string> args)
-        {
+    public class ListTeleCommand : PlayerCommand {
+        public override void Execute(ClientInfo sender, List<string> args) {
             throw new NotImplementedException();
         }
     }
 
     [Command("pay", "cmdPay", "Send some currency to another player.")]
-    public class PayCommand : PlayerCommand
-    {
-        public override void Execute(ClientInfo sender, List<string> args)
-        {
+    public class PayCommand : PlayerCommand {
+        public override void Execute(ClientInfo sender, List<string> args) {
             throw new NotImplementedException();
         }
     }
 
     [Command("removetele", "cmdRemoveTele", "Remove a teleport location")]
     [CommandAliases("deltele", "deletetele", "teledelete", "teleremove")]
-    public class RemoveTeleCommand : PlayerCommand
-    {
-        public override void Execute(ClientInfo sender, List<string> args)
-        {
+    public class RemoveTeleCommand : PlayerCommand {
+        public override void Execute(ClientInfo sender, List<string> args) {
             throw new NotImplementedException();
         }
     }
 
     [Command("renametele", "cmdRenameTele", "Rename a teleport location")]
     [CommandAliases("telerename")]
-    public class RenameTeleCommand : PlayerCommand
-    {
-        public override void Execute(ClientInfo sender, List<string> args)
-        {
+    public class RenameTeleCommand : PlayerCommand {
+        public override void Execute(ClientInfo sender, List<string> args) {
             throw new NotImplementedException();
         }
     }
 
     [Command("seen", "cmdSeen", "Check when a player was last online")]
     [CommandAliases("lastseen", "lastonline")]
-    public class SeenCommand : PlayerCommand
-    {
-        public override void Execute(ClientInfo sender, List<string> args)
-        {
+    public class SeenCommand : PlayerCommand {
+        public override void Execute(ClientInfo sender, List<string> args) {
             throw new NotImplementedException();
         }
     }
 
     [Command("settele", "cmdSetTele", "Create a teleport location")]
     [CommandAliases("teleset", "telecreate", "createtele")]
-    public class SetTeleCommand : PlayerCommand
-    {
-        public override void Execute(ClientInfo sender, List<string> args)
-        {
+    public class SetTeleCommand : PlayerCommand {
+        public override void Execute(ClientInfo sender, List<string> args) {
             throw new NotImplementedException();
         }
     }
 
     [Command("shop", "cmdShop", "Ingame shop")]
     [CommandAliases("store")]
-    public class ShopCommand : PlayerCommand
-    {
-        public override void Execute(ClientInfo sender, List<string> args)
-        {
+    public class ShopCommand : PlayerCommand {
+        public override void Execute(ClientInfo sender, List<string> args) {
             throw new NotImplementedException();
         }
     }
 
     [Command("tele", "cmdTele", "Teleport to a set location.")]
     [CommandAliases("tp", "teleport")]
-    public class TeleCommand : PlayerCommand
-    {
-        public override void Execute(ClientInfo sender, List<string> args)
-        {
+    public class TeleCommand : PlayerCommand {
+        public override void Execute(ClientInfo sender, List<string> args) {
             throw new NotImplementedException();
         }
     }
 
     [Command("telepublic", "cmdTelePublic", "Make a teleport public")]
     [CommandAliases("telepub", "pubtele", "publictele")]
-    public class TelePublicCommand : PlayerCommand
-    {
-        public override void Execute(ClientInfo sender, List<string> args)
-        {
+    public class TelePublicCommand : PlayerCommand {
+        public override void Execute(ClientInfo sender, List<string> args) {
             throw new NotImplementedException();
         }
     }
 
     [Command("teleprivate", "cmdTelePrivate", "Make a teleport private")]
     [CommandAliases("privatetele", "privtele", "telepriv")]
-    public class TelePrivateCommand : PlayerCommand
-    {
-        public override void Execute(ClientInfo sender, List<string> args)
-        {
+    public class TelePrivateCommand : PlayerCommand {
+        public override void Execute(ClientInfo sender, List<string> args) {
             throw new NotImplementedException();
         }
     }
 
     [Command("vote", "cmdVote", "Claim vote rewards")]
-    public class VoteCommand : PlayerCommand
-    {
-        public override void Execute(ClientInfo sender, List<string> args)
-        {
+    public class VoteCommand : PlayerCommand {
+        public override void Execute(ClientInfo sender, List<string> args) {
             throw new NotImplementedException();
         }
     }
 
     [Command("who", "cmdWho", "See who was in your area")]
     [CommandAliases("track", "search")]
-    public class WhoCommand : PlayerCommand
-    {
-        public override void Execute(ClientInfo sender, List<string> args)
-        {
+    public class WhoCommand : PlayerCommand {
+        public override void Execute(ClientInfo sender, List<string> args) {
             throw new NotImplementedException();
         }
     }
 
     [Command("outputgameobjects", "cmdOutputGameobjects", "Outputs the game objects to console and log.")]
-    public class OutputGameObjectsCommand : PlayerCommand
-    {
-        public override void Execute(ClientInfo sender, List<string> args)
-        {
+    public class OutputGameObjectsCommand : PlayerCommand {
+        public override void Execute(ClientInfo sender, List<string> args) {
             UnityUtility.OutputGameObjects();
         }
     }
 
     [Command("outputcomponents", "cmdOutputComponents", "Outputs the components attached to objects?")]
-    public class OutputComponentsCommand : PlayerCommand
-    {
-        public override void Execute(ClientInfo sender, List<string> args)
-        {
+    public class OutputComponentsCommand : PlayerCommand {
+        public override void Execute(ClientInfo sender, List<string> args) {
             if (args.Count < 1)
                 throw new CommandArgsException();
 
             UnityUtility.OutputComponents(args[0]);
         }
-    } 
+    }
 }

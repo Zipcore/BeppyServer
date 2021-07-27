@@ -1,9 +1,11 @@
-﻿using System;
-using System.Collections.Generic;
-using HarmonyLib;
-using BeppyServer.Native;
+﻿// ReSharper disable InconsistentNaming
 
 #if WIN32
+using System;
+using System.Collections.Generic;
+using BeppyServer.Native;
+using HarmonyLib;
+
 namespace BeppyServer.Patches
 {
     [HarmonyPatch(typeof(WinFormConnection))]
@@ -12,14 +14,14 @@ namespace BeppyServer.Patches
 
         [HarmonyPostfix]
         [HarmonyPatch(MethodType.Constructor, new Type[] { typeof(WinFormInstance) })]
-        static void ConstructorPostfix(WinFormConnection __instance)
+        private static void ConstructorPostfix(WinFormConnection __instance)
         {
             Console.NativeConsole = new WindowsConsole(__instance);
         }
 
         [HarmonyPrefix]
         [HarmonyPatch("SendLog")]
-        static bool SendLogPrefix(ref string _text, string _trace, UnityEngine.LogType _type)
+        private static bool SendLogPrefix(ref string _text, string _trace, UnityEngine.LogType _type)
         {
             Console.Translate(_type, ref _text);
             return true;
@@ -27,7 +29,7 @@ namespace BeppyServer.Patches
 
         [HarmonyPrefix]
         [HarmonyPatch("SendLine")]
-        static bool SendLinePrefix(ref string _line)
+        private static bool SendLinePrefix(ref string _line)
         {
             Console.Log(_line);
             return false;
@@ -35,7 +37,7 @@ namespace BeppyServer.Patches
 
         [HarmonyPrefix]
         [HarmonyPatch("SendLines")]
-        static bool SendLinesPrefix(List<string> _output)
+        private static bool SendLinesPrefix(List<string> _output)
         {
             foreach (string line in _output)
             {

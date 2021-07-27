@@ -18,6 +18,10 @@ namespace BeppyServer.Native
         {
             throw new NotImplementedException();
         }
+
+        public override string GetInput(string message) {
+            return "";
+        }
     }
 }
 #endif

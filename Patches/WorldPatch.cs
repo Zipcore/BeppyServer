@@ -1,15 +1,18 @@
 ﻿using HarmonyLib;
 
-namespace BeppyServer.Patches
-{
+namespace BeppyServer.Patches {
     [HarmonyPatch(typeof(World))]
-    class WorldPatch
-    {
+    internal class WorldPatch {
         public delegate void SaveCallback();
+
         public static SaveCallback OnSaveWorld;
 
+        // Is occasionally called before "World" type is loaded?
         [HarmonyPrefix]
         [HarmonyPatch("Cleanup")]
-        static void Cleanup() => OnSaveWorld();
+        private static void Cleanup() {
+            if (OnSaveWorld != null)
+                OnSaveWorld();
+        }
     }
 }
