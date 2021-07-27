@@ -1,6 +1,5 @@
-﻿using BepInEx;
+﻿using System.Data;
 using BepInEx.Configuration;
-using System.Data.SqlClient;
 
 namespace BeppyServer
 {
@@ -21,19 +20,33 @@ namespace BeppyServer
 
         private ConfigEntry<string> serverName;
         private ConfigEntry<string> databaseType;
+        private ConfigEntry<string> dbName;
         private ConfigEntry<string> dbIp;
+        private ConfigEntry<string> dbPort;
         private ConfigEntry<string> dbUsername;
         private ConfigEntry<string> dbPassword;
         private ConfigEntry<bool> handlePermissions;
+
+        private IDbConnection dbConnection;
+        private string connectionString;
 
         public BeppyCluster(ConfigFile Config)
         {
             serverName = Config.Bind("Cluster", "LocalServerName", "7 Days to Die Server");
             databaseType = Config.Bind("Cluster", "DatabaseType", "SQLServer");
-            dbIp = Config.Bind("Cluster", "DatabaseIP", "127.0.0.1:1433");
-            dbUsername = Config.Bind("Cluster", "DatabaseUsername", "");
+            dbName = Config.Bind("Cluster", "DatabaseSchema", "7D2D");
+            dbIp = Config.Bind("Cluster", "DatabaseIP", "127.0.0.1");
+            dbPort = Config.Bind("Cluster", "DatabasePort", "1433");
+            dbUsername = Config.Bind("Cluster", "DatabaseUsername", "admin");
             dbPassword = Config.Bind("Cluster", "DatabasePassword", "Adm1n1strator");
             handlePermissions = Config.Bind("Cluster", "UseClusterPermissions", false);
+            
+            connectionString = $"Server={dbIp.Value},{dbPort.Value};Database={dbName.Value};User ID={dbUsername.Value};Password={dbPassword.Value};";
+        }
+
+        public void Cleanup()
+        {
+            dbConnection.Close();
         }
     }
 }

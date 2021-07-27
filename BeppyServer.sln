@@ -3,23 +3,29 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 16
 VisualStudioVersion = 16.0.31410.357
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "BeppyServer", "BeppyServer.csproj", "{8665D258-5011-4E1C-886D-DA82C4F5F4DC}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "BeppyServer", "BeppyServer.csproj", "{82ADB1AF-333C-4CA0-B2C1-224AA21AE5E1}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
-		Windows|Any CPU = Windows|Any CPU
+		Debug|Any CPU = Debug|Any CPU
 		Linux|Any CPU = Linux|Any CPU
+		Release|Any CPU = Release|Any CPU
+		Win32|Any CPU = Win32|Any CPU
 	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
-		{8665D258-5011-4E1C-886D-DA82C4F5F4DC}.Windows|Any CPU.ActiveCfg = Win32|Any CPU
-		{8665D258-5011-4E1C-886D-DA82C4F5F4DC}.Windows|Any CPU.Build.0 = Win32|Any CPU
-		{8665D258-5011-4E1C-886D-DA82C4F5F4DC}.Linux|Any CPU.ActiveCfg = Linux|Any CPU
-		{8665D258-5011-4E1C-886D-DA82C4F5F4DC}.Linux|Any CPU.Build.0 = Linux|Any CPU
+		{82ADB1AF-333C-4CA0-B2C1-224AA21AE5E1}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{82ADB1AF-333C-4CA0-B2C1-224AA21AE5E1}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{82ADB1AF-333C-4CA0-B2C1-224AA21AE5E1}.Linux|Any CPU.ActiveCfg = Linux|Any CPU
+		{82ADB1AF-333C-4CA0-B2C1-224AA21AE5E1}.Linux|Any CPU.Build.0 = Linux|Any CPU
+		{82ADB1AF-333C-4CA0-B2C1-224AA21AE5E1}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{82ADB1AF-333C-4CA0-B2C1-224AA21AE5E1}.Release|Any CPU.Build.0 = Release|Any CPU
+		{82ADB1AF-333C-4CA0-B2C1-224AA21AE5E1}.Win32|Any CPU.ActiveCfg = Win32|Any CPU
+		{82ADB1AF-333C-4CA0-B2C1-224AA21AE5E1}.Win32|Any CPU.Build.0 = Win32|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
-		SolutionGuid = {B3A175CB-59A8-49FA-97C0-DF4F59BDD7BB}
+		SolutionGuid = {6EDAF48A-FEC2-4960-A33D-865D1D4E8172}
 	EndGlobalSection
 EndGlobal
