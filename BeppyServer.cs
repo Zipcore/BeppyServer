@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using BepInEx;
 using BepInEx.Configuration;
 using BeppyServer.Patches;
+using BeppyServer.DataSources;
 using HarmonyLib;
 
 namespace BeppyServer {
@@ -21,11 +22,12 @@ namespace BeppyServer {
         // 
 
         public static BeppyServer Instance;
-        private BeppyCluster cluster;
 
+        private IDataSource dataSource;
         private Permissions permissions;
 
         private ConfigEntry<string> permissionsFile;
+        private ConfigEntry<bool> isCluster;
 
         public void Awake() {
             Instance = this;
@@ -34,10 +36,12 @@ namespace BeppyServer {
             string serverName = GamePrefs.GetString(EnumGamePrefs.GameName);
             Console.Log($"Server Name: {serverName}");
 
-            permissionsFile = Config.Bind("General", "PermissionsFile", "permissions.json");
-
-            permissions = new Permissions();
-            cluster = new BeppyCluster(Config);
+            permissionsFile = Config.Bind("General", "PermissionsFile", "permissions.json",
+                "Permissions file name if ClusterEnabled is false.");
+            isCluster = Config.Bind("General", "ClusterEnabled", false);
+            
+            ConfigEntry<string> clusterServerName = Config.Bind("Cluster", "LocalServerName", "7 Days to Die Server");
+            ConfigEntry<string> dbConnectionString = Config.Bind("Cluster", "DBConnectionString", "");
 
             new Harmony("beppyserver").PatchAll();
 
@@ -46,60 +50,17 @@ namespace BeppyServer {
             GameManagerPatch.OnPlayerCommand += OnPlayerCommand;
             GameStateManagerPatch.OnStartGameFinished += OnStartGameFinished;
             WorldPatch.OnSaveWorld += OnSaveWorld;
-
-            string[] args = Environment.GetCommandLineArgs();
-            foreach (string arg in args) Console.Log(arg);
-
-            // CommandLine Arg: -permissionsfile=<filename>
-            // If specified then the server will use the filename as the permissions file.
-            string permissionsFileArg = GetCommandLineArg("permissionsfile");
-
-            // CommandLine Arg: -useclusterpermissions
-            // If specified then the server will use permissions from the cluster instead of a file.
-            // Takes precedence over -permissionsfile arg
-            string useClusterPermissionsArg = GetCommandLineArg("useclusterpermissions", false);
-
-            // IMPORTANT!! CommandLine Args take precedence over BepInEx's config file (beppyserver.cfg).
-            if (useClusterPermissionsArg != null) {
-                cluster.IsHandlingPermissions = true;
-            } else if (permissionsFileArg != null) {
-                permissionsFile.Value = permissionsFileArg;
-                cluster.IsHandlingPermissions = false;
-            }
-
+            
+            if (isCluster.Value)
+                dataSource = new ClusterPermissions(dbConnectionString.Value);
+            else
+                dataSource = new FilePermissions(permissionsFile.Value);
+            
+            permissions = dataSource.Load();
             Console.Log("BeppyServer Loaded!");
         }
 
-        private static string GetCommandLineArg(string name, bool hasvalue = true) {
-            string[] args = Environment.GetCommandLineArgs();
-            foreach (string arg in args) {
-                if (!arg.ContainsCaseInsensitive(name))
-                    continue;
-                if (!hasvalue) return arg;
-                string[] kv = arg.Split('=');
-                if (kv.Length > 1)
-                    return kv[1];
-            }
-
-            return null;
-        }
-
-        // Returning false causes break in game.
         public void OnBeforeStartGame() {
-            if (cluster.IsHandlingPermissions) {
-                if (!cluster.VerifyDatabase()) {
-                    string shouldCreate = "";
-                    while (!shouldCreate.EqualsCaseInsensitive("y") && !shouldCreate.EqualsCaseInsensitive("n"))
-                        shouldCreate = Console.GetInput("Would you like me to create them for you [Y/n]: ");
-                    if (shouldCreate.EqualsCaseInsensitive("n"))
-                        throw new Exception("Please create the database then relaunch the server.");
-
-                    cluster.SetupDatabase();
-                    permissions.LoadFromCluster(cluster);
-                }
-            } else {
-                permissions.LoadFromFile(permissionsFile.Value);
-            }
         }
 
         // 2021-07-11T12:14:12 4.698 INF StartAsServer
@@ -115,21 +76,20 @@ namespace BeppyServer {
 
         public void OnSaveWorld() {
             Console.Log("Saving permissions.");
-
-            if (cluster.IsHandlingPermissions)
-                permissions.SaveToCluster(cluster);
-            else
-                permissions.SaveToFile(permissionsFile.Value);
+            dataSource.Save(permissions);
         }
 
         // When the client has spawned he will have both an entityId and playerName.
         private void OnClientSpawned(ClientInfo obj) {
             string steamId = obj.playerId;
             string name = obj.playerName;
-
-            if (permissions.GetPlayerBySteamId(steamId) == null) {
+            
+            Player p = permissions.GetPlayerBySteamId(steamId);
+            if (p == null) {
                 Console.Log($"This is {name}'s first time playing. Creating permissions.");
-                permissions.AddPlayer(new Player(steamId, name, "user"));
+                permissions.AddPlayer(new Player(steamId, name, "user", false, DateTime.Now));
+            } else {
+                p.LastPlayed = DateTime.Now;
             }
         }
 
@@ -166,8 +126,6 @@ namespace BeppyServer {
         // Happens when the server receives a packet.
         public static void OnParsePackage(PooledBinaryReader reader, ClientInfo sender, ref NetPackage result) { }
 
-        public static ClientInfo GetClientInfo(string playerName) {
-            return ConsoleHelper.ParseParamPlayerName(playerName);
-        }
+        public static ClientInfo GetClientInfo(string playerName) => ConsoleHelper.ParseParamPlayerName(playerName);
     }
 }
