@@ -19,12 +19,16 @@ namespace BeppyServer.Patches {
         private static bool StartGamePrefix() {
             try {
                 OnBeforeStartGame();
-                return true;
             } catch (Exception e) {
                 Console.Exception(e);
+                if (e.InnerException != null)
+                    Console.Exception(e.InnerException);
+                
                 Application.Quit();
                 return false;
             }
+            
+            return true;
         }
 
         [HarmonyPostfix]

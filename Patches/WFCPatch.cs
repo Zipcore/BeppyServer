@@ -13,7 +13,7 @@ namespace BeppyServer.Patches
     {
 
         [HarmonyPostfix]
-        [HarmonyPatch(MethodType.Constructor, new Type[] { typeof(WinFormInstance) })]
+        [HarmonyPatch(MethodType.Constructor, typeof(WinFormInstance))]
         private static void ConstructorPostfix(WinFormConnection __instance)
         {
             Console.NativeConsole = new WindowsConsole(__instance);
@@ -31,20 +31,8 @@ namespace BeppyServer.Patches
         [HarmonyPatch("SendLine")]
         private static bool SendLinePrefix(ref string _line)
         {
-            Console.Log(_line);
-            return false;
-        }
-
-        [HarmonyPrefix]
-        [HarmonyPatch("SendLines")]
-        private static bool SendLinesPrefix(List<string> _output)
-        {
-            foreach (string line in _output)
-            {
-                Console.Log(line);
-            }
-
-            return false;
+            Console.Translate(UnityEngine.LogType.Log, ref _line);
+            return true;
         }
     }
 }

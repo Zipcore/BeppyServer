@@ -47,7 +47,9 @@ namespace BeppyServer {
         }
 
         public static string GetInput(string message) {
-            return NativeConsole.GetInput(message);
+            string input = NativeConsole.GetInput(message);
+            Log("Input was " + input);
+            return input;
         }
     }
 }
