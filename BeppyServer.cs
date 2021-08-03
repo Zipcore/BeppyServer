@@ -8,6 +8,7 @@ using HarmonyLib;
 
 namespace BeppyServer {
     [BepInPlugin("beppyserver", "BeppyServer", "1.0.0.0")]
+    [BepInDependency("beppyserver.webserver", BepInDependency.DependencyFlags.SoftDependency)]
     public class BeppyServer : BaseUnityPlugin {
         // Things to note:
         // PooledBinaryReader.ReadString reads a length-prefixed string. The length is the ONE byte before the string
@@ -19,28 +20,22 @@ namespace BeppyServer {
         // TODOS
         // Add VAC interception and give server owners the option to not allow people who are VAC banned (Steamworks)
         // Create way to edit the serverconfig while server is running
-
-        private WebServer webServer;
         private Cluster cluster;
         
         private IDataSource dataSource;
         private Permissions permissions;
-
+        
         public void Awake() {
             ConfigEntry<bool> clusterEnabled = Config.Bind("General", "ClusterEnabled", false);
-            ConfigEntry<bool> webserverEnabled = Config.Bind("General", "WebServerEnabled", false);
             ConfigEntry<string> permissionsFile = Config.Bind("General", "PermissionsFile", "permissions.json",
                 "Permissions file name if ClusterEnabled is false.");
 
             ConfigEntry<string> webserverRootAddress = Config.Bind("General", "WebServerURL", "http://localhost/",
                 "URL for players to open in their browser.");
-            
+
             Console.BeppyConsole = Logger;
-            
-            webServer = new WebServer(Config);
             cluster = new Cluster(Config);
             
-            webServer.GetServerStatus += GetServerStatus;
             GameManagerPatch.OnStartGame += OnStartGame;
             GameManagerPatch.OnBeforeStartGame += OnBeforeStartGame;
             GameManagerPatch.OnPlayerCommand += OnPlayerCommand;
@@ -58,23 +53,14 @@ namespace BeppyServer {
                 dataSource = new FilePermissions(permissionsFile.Value);
 
             permissions = dataSource.Load();
-
-            if (webserverEnabled.Value)
-                webServer.Open();
-
+            
             Console.Log("BeppyServer Loaded!");
         }
 
-        private ServerStatus GetServerStatus() {
-            int curConn = WorldManager.World.Players.Count;
-            int maxConn = GamePrefs.GetInt(EnumGamePrefs.ServerMaxPlayerCount);
-
-            return new ServerStatus {
-                connections = curConn,
-                maxConnections = maxConn
-            };
+        public void WebServerCommandReceived(byte[] bytes) {
+            Console.Log($"Received command from WebServer {BitConverter.ToString(bytes)}");
         }
-
+        
         public void OnBeforeStartGame() {
         }
 
@@ -92,7 +78,6 @@ namespace BeppyServer {
         public void OnSaveWorld() {
             Console.Log("Saving permissions.");
             dataSource.Save(permissions);
-            webServer.Close();
         }
 
         // When the client has spawned he will have both an entityId and playerName.

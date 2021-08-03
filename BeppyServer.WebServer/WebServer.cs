@@ -2,34 +2,28 @@
 using System.IO;
 using System.Net;
 using System.Net.Sockets;
-using System.Runtime.InteropServices;
 using System.Runtime.Serialization.Formatters.Binary;
+using BepInEx;
 using BepInEx.Configuration;
 
-namespace BeppyServer {
-
-    [Serializable]
-    public struct ServerStatus {
-        public int connections;
-        public int maxConnections;
-    }
+namespace BeppyServer.WebServer {
     
-    public class WebServer {
+    [BepInPlugin("beppyserver.webserver", "BeppyServer.WebServer", "1.0.0.0")]
+    [BepInDependency("beppyserver")]
+    public class WebServer : BaseUnityPlugin {
 
+        private BeppyServer beppyServer;
         private TcpListener listener;
 
         private ConfigEntry<int> webserverConnPort;
         private ConfigEntry<string> webserverConnIp;
-        
-        public delegate ServerStatus StatusCallback();
-        public StatusCallback GetServerStatus;
 
-        public WebServer(ConfigFile config) {
-            webserverConnIp = config.Bind("WebServer", "LocalAddress", "localhost");
-            webserverConnPort = config.Bind("WebServer", "UniquePort", 25000);
-        }
+        private void Awake() {
+            beppyServer = FindObjectOfType<BeppyServer>();
+            
+            webserverConnIp = Config.Bind("WebServer", "LocalAddress", "localhost");
+            webserverConnPort = Config.Bind("WebServer", "UniquePort", 25000);
 
-        public void Open() {
             IPAddress localAddr = IPAddress.Parse(webserverConnIp.Value);
             listener = new TcpListener(localAddr, webserverConnPort.Value);
 
@@ -39,15 +33,16 @@ namespace BeppyServer {
                 Console.Exception(e);
             }
         }
-
-        public void Close() {
-            listener.Stop();
-        }
-
-        private byte[] GetSerializedStatus() {
+        
+        private static byte[] GetSerializedStatus() {
+            ServerStatus status = new ServerStatus {
+                connections = WorldManager.World.Players.Count,
+                maxConnections = GamePrefs.GetInt(EnumGamePrefs.ServerMaxPlayerCount)
+            };
+            
             BinaryFormatter bf = new BinaryFormatter();
             using (MemoryStream ms = new MemoryStream()) {
-                bf.Serialize(ms, GetServerStatus());
+                bf.Serialize(ms, status);
                 return ms.ToArray();
             }
         }
@@ -90,21 +85,23 @@ namespace BeppyServer {
         // Is called when the stream finishes reading.
         // Ends the stream as a whole.
         private void ReceiveCallback(IAsyncResult ar) {
-            Tuple<TcpClient, byte[]> state = (Tuple<TcpClient, byte[]>) ar.AsyncState;
-            TcpClient client = state.Item1;
-            byte[] readBytes = state.Item2;
-            
-            // TODO: Convert readBytes into structure identical to the WebServer's command
+            (TcpClient client, byte[] readBytes) = (Tuple<TcpClient, byte[]>) ar.AsyncState;
 
             try {
                 NetworkStream stream = client.GetStream();
                 int read = stream.EndRead(ar);
+                // TODO: Convert readBytes into structure identical to the WebServer's command
+                beppyServer.SendMessage("WebServerCommandReceived", readBytes);
             } catch (Exception e) {
                 Console.Exception(e);
             } finally {
                 client.Close();
             }
             
+        }
+
+        private void OnApplicationQuit() {
+            listener.Stop();
         }
     }
 }

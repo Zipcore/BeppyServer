@@ -3,13 +3,16 @@ using System.Net;
 using HarmonyLib;
 // ReSharper disable InconsistentNaming
 
+using NativeWebServer = global::WebServer;
+
+// ReSharper disable once CheckNamespace
 namespace BeppyServer.Patches {
-    [HarmonyPatch(typeof(WebServer))]
+    [HarmonyPatch(typeof(NativeWebServer))]
     public class WebServerPatch {
         [HarmonyPostfix]
         [HarmonyPatch(MethodType.Constructor, typeof(string[]), typeof(Func<HttpListenerRequest, string>))]
         private static void ConstructorPostfix(
-            ref WebServer __instance, string[] prefixes, Func<HttpListenerRequest, string> method
+            ref NativeWebServer __instance, string[] prefixes, Func<HttpListenerRequest, string> method
         ) {
             Console.Log("WebServer Constructor1 Postfixed");
         }
@@ -17,7 +20,7 @@ namespace BeppyServer.Patches {
         [HarmonyPostfix]
         [HarmonyPatch(MethodType.Constructor, typeof(Func<HttpListenerRequest, string>), typeof(string[]))]
         private static void ConstructorPostfix(
-            ref WebServer __instance, Func<HttpListenerRequest, string> method, params string[] prefixes
+            ref NativeWebServer __instance, Func<HttpListenerRequest, string> method, params string[] prefixes
         ) {
             Console.Log("WebServer Constructor2 Postfixed");
         }
