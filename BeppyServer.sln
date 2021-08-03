@@ -5,6 +5,8 @@ VisualStudioVersion = 16.0.31410.357
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "BeppyServer", "BeppyServer.csproj", "{82ADB1AF-333C-4CA0-B2C1-224AA21AE5E1}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "BeppyServerUnitTests", "BeppyServerUnitTests\BeppyServerUnitTests.csproj", "{57A0F04B-FD08-4E5C-B0DB-F060989BC706}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -21,6 +23,14 @@ Global
 		{82ADB1AF-333C-4CA0-B2C1-224AA21AE5E1}.Release|Any CPU.Build.0 = Release|Any CPU
 		{82ADB1AF-333C-4CA0-B2C1-224AA21AE5E1}.Win32|Any CPU.ActiveCfg = Win32|Any CPU
 		{82ADB1AF-333C-4CA0-B2C1-224AA21AE5E1}.Win32|Any CPU.Build.0 = Win32|Any CPU
+		{57A0F04B-FD08-4E5C-B0DB-F060989BC706}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{57A0F04B-FD08-4E5C-B0DB-F060989BC706}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{57A0F04B-FD08-4E5C-B0DB-F060989BC706}.Linux|Any CPU.ActiveCfg = Debug|Any CPU
+		{57A0F04B-FD08-4E5C-B0DB-F060989BC706}.Linux|Any CPU.Build.0 = Debug|Any CPU
+		{57A0F04B-FD08-4E5C-B0DB-F060989BC706}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{57A0F04B-FD08-4E5C-B0DB-F060989BC706}.Release|Any CPU.Build.0 = Release|Any CPU
+		{57A0F04B-FD08-4E5C-B0DB-F060989BC706}.Win32|Any CPU.ActiveCfg = Debug|Any CPU
+		{57A0F04B-FD08-4E5C-B0DB-F060989BC706}.Win32|Any CPU.Build.0 = Debug|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

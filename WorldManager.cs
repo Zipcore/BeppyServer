@@ -1,8 +1,8 @@
 ﻿using System.Collections.Generic;
 
 namespace BeppyServer {
-    public class WorldManager {
-        private static World World => GameManager.Instance.World;
+    public static class WorldManager {
+        public static World World => GameManager.Instance.World;
 
         public static List<TraderArea> Traders => World.TraderAreas;
 

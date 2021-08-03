@@ -19,45 +19,60 @@ namespace BeppyServer {
         // TODOS
         // Add VAC interception and give server owners the option to not allow people who are VAC banned (Steamworks)
         // Create way to edit the serverconfig while server is running
-        // 
 
-        public static BeppyServer Instance;
-
+        private WebServer webServer;
+        private Cluster cluster;
+        
         private IDataSource dataSource;
         private Permissions permissions;
 
-        private ConfigEntry<string> permissionsFile;
-        private ConfigEntry<bool> isCluster;
-
         public void Awake() {
-            Instance = this;
-            Console.BeppyConsole = Logger;
-
-            string serverName = GamePrefs.GetString(EnumGamePrefs.GameName);
-            Console.Log($"Server Name: {serverName}");
-
-            permissionsFile = Config.Bind("General", "PermissionsFile", "permissions.json",
+            ConfigEntry<bool> clusterEnabled = Config.Bind("General", "ClusterEnabled", false);
+            ConfigEntry<bool> webserverEnabled = Config.Bind("General", "WebServerEnabled", false);
+            ConfigEntry<string> permissionsFile = Config.Bind("General", "PermissionsFile", "permissions.json",
                 "Permissions file name if ClusterEnabled is false.");
-            isCluster = Config.Bind("General", "ClusterEnabled", false);
+
+            ConfigEntry<string> webserverRootAddress = Config.Bind("General", "WebServerURL", "http://localhost/",
+                "URL for players to open in their browser.");
             
-            ConfigEntry<string> clusterServerName = Config.Bind("Cluster", "LocalServerName", "7 Days to Die Server");
-            ConfigEntry<string> dbConnectionString = Config.Bind("Cluster", "DBConnectionString", "");
-
-            new Harmony("beppyserver").PatchAll();
-
+            Console.BeppyConsole = Logger;
+            
+            webServer = new WebServer(Config);
+            cluster = new Cluster(Config);
+            
+            webServer.GetServerStatus += GetServerStatus;
             GameManagerPatch.OnStartGame += OnStartGame;
             GameManagerPatch.OnBeforeStartGame += OnBeforeStartGame;
             GameManagerPatch.OnPlayerCommand += OnPlayerCommand;
             GameStateManagerPatch.OnStartGameFinished += OnStartGameFinished;
             WorldPatch.OnSaveWorld += OnSaveWorld;
+
+            string serverName = GamePrefs.GetString(EnumGamePrefs.GameName);
+            Console.Log($"Server Name: {serverName}");
             
-            if (isCluster.Value)
-                dataSource = new ClusterPermissions(dbConnectionString.Value);
+            new Harmony("beppyserver").PatchAll();
+
+            if (clusterEnabled.Value)
+                dataSource = cluster.InitializePermissions();
             else
                 dataSource = new FilePermissions(permissionsFile.Value);
-            
+
             permissions = dataSource.Load();
+
+            if (webserverEnabled.Value)
+                webServer.Open();
+
             Console.Log("BeppyServer Loaded!");
+        }
+
+        private ServerStatus GetServerStatus() {
+            int curConn = WorldManager.World.Players.Count;
+            int maxConn = GamePrefs.GetInt(EnumGamePrefs.ServerMaxPlayerCount);
+
+            return new ServerStatus {
+                connections = curConn,
+                maxConnections = maxConn
+            };
         }
 
         public void OnBeforeStartGame() {
@@ -65,9 +80,9 @@ namespace BeppyServer {
 
         // 2021-07-11T12:14:12 4.698 INF StartAsServer
         public void OnStartGame() {
-            ConnectionManager.OnClientAdded += Instance.OnClientAdded;
-            ConnectionManager.OnClientDisconnected += Instance.OnClientDisconnected;
-            GameManager.Instance.OnClientSpawned += Instance.OnClientSpawned;
+            ConnectionManager.OnClientAdded += OnClientAdded;
+            ConnectionManager.OnClientDisconnected += OnClientDisconnected;
+            GameManager.Instance.OnClientSpawned += OnClientSpawned;
         }
 
         public void OnStartGameFinished() {
@@ -77,6 +92,7 @@ namespace BeppyServer {
         public void OnSaveWorld() {
             Console.Log("Saving permissions.");
             dataSource.Save(permissions);
+            webServer.Close();
         }
 
         // When the client has spawned he will have both an entityId and playerName.

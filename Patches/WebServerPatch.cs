@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Net;
 using HarmonyLib;
+// ReSharper disable InconsistentNaming
 
 namespace BeppyServer.Patches {
     [HarmonyPatch(typeof(WebServer))]

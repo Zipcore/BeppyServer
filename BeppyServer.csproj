@@ -97,7 +97,8 @@
     <Compile Include="Admin.cs" />
     <Compile Include="BeppyLogType.cs" />
     <Compile Include="BeppyServer.cs" />
-    <Compile Include="BeppyWebServer.cs" />
+    <Compile Include="Cluster.cs" />
+    <Compile Include="WebServer.cs" />
     <Compile Include="DataSources\ClusterPermissions.cs" />
     <Compile Include="DataSources\FilePermissions.cs" />
     <Compile Include="DataSources\IDataSource.cs" />
